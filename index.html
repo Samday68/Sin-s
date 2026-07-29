@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en" style="overflow:hidden;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VOLATILITY ANALYZER V.2.0</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { overflow: auto; height: 100%; }
+
+    body {
+      font-family: sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      margin: 0;
+      padding: 4px 3px;
+      transition: background-color 0.3s, color 0.3s;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
+    body.day-mode { background: #fff; color: #000; }
+
+    #mainContainer {
+      display: flex;
+      gap: 4px;
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: visible;
+    }
+
+    #leftSection {
+      flex: 1;
+      min-width: 0;
+      max-width: 100%;
+      z-index: 2;
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      #mainContainer { gap: 3px; }
+      #leftSection { flex: 1; min-width: 0; }
+      body { padding: 3px 2px; }
+    }
+
+    #headerSection {
+      text-align: center;
+      margin: 4px 0;
+      width: 100%;
+    }
+
+    #headerLogo {
+      width: 100%;
+      height: 65px;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      margin: 0 auto;
+      transition: opacity 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      #headerLogo { height: 52px; }
+    }
+
+    #toggleRow {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      align-items: center;
+      margin: 4px auto;
+    }
+
+    #themeToggle {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    body.day-mode #themeToggle { background: #ffd700; }
+
+    @media (max-width: 768px) {
+      #toggleRow { gap: 12px; }
+      #themeToggle {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+      }
+    }
+
+    #pairsWrap {
+      width: 100%;
+      margin: 3px 0;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-wrap: nowrap;
+    }
+
+    #pairs {
+      display: flex;
+      gap: 1px;
+      flex-wrap: nowrap;
+      flex: 1;
+    }
+
+    .pair-btn {
+      padding: 4px 2px;
+      border: none;
+      border-radius: 4px;
+      background: #555;
+      color: #fff;
+      cursor: pointer;
+      font-size: 7.5px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 30px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.day-mode .pair-btn {
+      background: #e0e0e0;
+      color: #000;
+    }
+
+    .pair-btn.active {
+      background: #000;
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .pair-btn {
+        padding: 3px 1px;
+        font-size: 6.5px;
+        min-width: 26px;
+      }
+    }
+
+    #startStopBtn {
+      padding: 0;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #startStopBtn.stopped { background: transparent; }
+
+    @media (max-width: 768px) {
+      #startStopBtn {
+        padding: 4px 8px;
+        font-size: 9px;
+      }
+    }
+
+    #topbar {
+      display: flex;
+      gap: 3px;
+      margin: 4px 0;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+
+    #time {
+      background: #000;
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 9px;
+      white-space: nowrap;
+      height: 21px;
+      display: flex;
+      align-items: center;
+    }
+
+    body.day-mode #time { background: #333; }
+
+    #price {
+      background: #0b57d0;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 10px;
+      text-align: center;
+      white-space: nowrap;
+      height: 21px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    @media (max-width: 768px) {
+      #time {
+        font-size: 8px;
+        padding: 2px 6px;
+        height: 19px;
+      }
+
+      #price {
+        font-size: 9px;
+        padding: 2px 6px;
+        height: 19px;
+      }
+    }
+
+    #chartContainer {
+      position: relative;
+      width: 100%;
+    }
+
+    #chart {
+      width: 100%;
+      height: 180px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 768px) {
+      #chart { height: 130px; }
+    }
+
+    #chartWatermark {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      height: 65px;
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 1;
+      object-fit: contain;
+      object-position: center;
+      transition: opacity 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      #chartWatermark { height: 52px; }
+    }
+
+    #xzRowWrap {
+      width: 100%;
+      position: relative;
+      margin-top: 1px;
+      overflow: visible;
+    }
+
+    #numbersTop {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      overflow: visible;
+      width: 100%;
+      position: relative;
+      padding: 3px 0;
+    }
+
+    .num-box {
+      flex: 0 0 36px;
+      height: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 1px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 3px;
+      position: relative;
+      overflow: visible;
+    }
+
+    @media (max-width: 768px) {
+      .num-box {
+        flex: 0 0 28px;
+        height: 18px;
+        font-size: 10px;
+        margin: 0.5px;
+      }
+    }
+
+    .worm-line {
+      position: absolute;
+      height: 1px;
+      border-top: 2px solid;
+      z-index: 5;
+    }
+
+    /* SINÜS PANELİ */
+    #sinusPanel {
+      width: 100%;
+      height: 80px;
+      margin-top: 4px;
+      position: relative;
+      background: rgba(255,255,255,0.03);
+      border-radius: 4px;
+    }
+
+    #sinusCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+      #sinusPanel {
+        height: 60px;
+      }
+    }
+
+    #loadingIndicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.3s;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #333;
+      border-top: 5px solid #0b57d0;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .performance-mode {
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+
+    .hw-accelerate {
+      transform: translate3d(0, 0, 0);
+    }
+
+    @media (min-width: 769px) {
+      #topbar { flex-wrap: nowrap; }
+      #price { flex-shrink: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loadingIndicator">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="mainContainer">
+    <div id="leftSection">
+
+      <div id="headerSection">
+        <img
+          id="headerLogo"
+          loading="lazy"
+          src="https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/D354DBAF-3EC7-4B5F-ABC1-8EF876797DAA.jpeg"
+          alt="logo"
+          onerror="this.style.display='none';"
+        />
+      </div>
+
+      <div id="toggleRow">
+        <button id="themeToggle">🌙</button>
+      </div>
+
+      <div id="pairsWrap">
+
+        <div id="pairs">
+          <button class="pair-btn active" data-pair="R_100">100</button>
+          <button class="pair-btn" data-pair="R_75">75</button>
+          <button class="pair-btn" data-pair="R_50">50</button>
+          <button class="pair-btn" data-pair="R_25">25</button>
+          <button class="pair-btn" data-pair="R_10">10</button>
+          <button class="pair-btn" data-pair="RDBEAR">BEAR</button>
+          <button class="pair-btn" data-pair="RDBULL">BULL</button>
+          <button class="pair-btn" id="sinBtn">SİN</button>
+        </div>
+
+        <button id="startStopBtn" title="Refresh">
+          <svg width="26" height="26" viewBox="0 0 100 100" style="display:block;">
+            <defs>
+              <radialGradient id="rgOuter" cx="40%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="30%" stop-color="#d0d0d0"/>
+                <stop offset="70%" stop-color="#a0a0a0"/>
+                <stop offset="100%" stop-color="#606060"/>
+              </radialGradient>
+              <radialGradient id="rgYellow" cx="38%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#fff176"/>
+                <stop offset="40%" stop-color="#fdd835"/>
+                <stop offset="80%" stop-color="#f9a825"/>
+                <stop offset="100%" stop-color="#e65100"/>
+              </radialGradient>
+              <radialGradient id="rgInner" cx="40%" cy="30%" r="65%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="49" fill="url(#rgOuter)"/>
+            <circle cx="50" cy="50" r="40" fill="url(#rgYellow)"/>
+            <ellipse cx="42" cy="34" rx="16" ry="10" fill="white" opacity="0.35"/>
+            <path d="M50 24 A26 26 0 1 1 27 62" fill="none" stroke="#1a1a1a" stroke-width="11" stroke-linecap="round"/>
+            <polygon points="50,12 37,26 63,26" fill="#1a1a1a"/>
+            <circle cx="50" cy="50" r="49" fill="url(#rgInner)"/>
+          </svg>
+        </button>
+
+      </div>
+
+      <div id="topbar">
+        <div id="time">GMT 00:00:00</div>
+        <div id="price">0.00</div>
+      </div>
+
+      <div id="chartContainer">
+        <img
+          id="chartWatermark"
+          loading="lazy"
+          src="https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/D354DBAF-3EC7-4B5F-ABC1-8EF876797DAA.jpeg"
+          alt=""
+          onerror="this.style.display='none';"
+        />
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div id="xzRowWrap">
+        <div id="numbersTop"></div>
+        <!-- SINÜS PANELİ -->
+        <div id="sinusPanel">
+          <canvas id="sinusCanvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+
+    const DISPLAY_COUNT = 20;
+
+    let ws = null;
+    let isRunning = true;
+
+    let prices = [];
+    let decimalDigits = [];
+    let wormLinesTop = [];
+    let numColors = [];
+
+    let currentPair = 'R_100';
+
+    let chart = null;
+
+    let _lastTickRender = 0;
+    let _tickRenderThrottle = 80;
+    let _pendingRender = false;
+
+    // ---------- SİNÜS DEĞİŞKENLERİ ----------
+    let sinusMode = false;
+    let sinusActive = false;
+    let sinusParams = { M: 0, A: 0, T: 20, phi: 0, t: 0 };
+    let sinusData = [];
+    let sinusLevelDetected = false;
+    let sinusLevelValue = 0;
+    let sinusLevelDrawn = false;
+    let sinusPendingTick = false;
+    let sinusTickCount = 0;
+    const sinusMaxTicks = 100;
+    let sinusCanvas = null;
+    let sinusCtx = null;
+
+    // =========================
+    // TEMA
+    // =========================
+
+    function updateLogos() {
+      const isDark = !document.body.classList.contains('day-mode');
+      document.getElementById('headerLogo').src =
+        isDark
+        ? 'https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/D354DBAF-3EC7-4B5F-ABC1-8EF876797DAA.jpeg'
+        : 'https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/B3F65E6D-3FB0-45E3-A46A-7E788A46DEC7.jpeg';
+      document.getElementById('chartWatermark').src =
+        isDark
+        ? 'https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/D354DBAF-3EC7-4B5F-ABC1-8EF876797DAA.jpeg'
+        : 'https://raw.githubusercontent.com/Samday68/Foto-raflar/refs/heads/main/B3F65E6D-3FB0-45E3-A46A-7E788A46DEC7.jpeg';
+    }
+
+    function updateChartColors() {
+      if (!chart) return;
+      const isDark = !document.body.classList.contains('day-mode');
+      chart.data.datasets[0].borderColor = isDark ? '#fff' : '#000';
+      chart.data.datasets[0].backgroundColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+      chart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+      chart.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+      chart.options.scales.y.ticks.color = isDark ? '#fff' : '#000';
+      chart.options.scales.x.ticks.color = isDark ? '#fff' : '#000';
+      chart.update('none');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('day-mode');
+      document.getElementById('themeToggle').innerText =
+        document.body.classList.contains('day-mode') ? '☀️' : '🌙';
+      updateLogos();
+      updateChartColors();
+    }
+
+    // =========================
+    // PAIR SEÇİMİ
+    // =========================
+
+    function selectPair(pair) {
+      currentPair = pair;
+      document.querySelectorAll('.pair-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('.pair-btn[data-pair="' + pair + '"]').classList.add('active');
+      if (ws) ws.close();
+      prices = [];
+      decimalDigits = [];
+      wormLinesTop = [];
+      numColors = [];
+      document.getElementById('numbersTop').innerHTML = '';
+      // Sinüs verilerini de temizle
+      resetSinus();
+      if (isRunning) startWS();
+    }
+
+    // =========================
+    // WORM
+    // =========================
+
+    function updateWorm() {
+      if (prices.length < 20) return;
+      const l20 = prices.slice(-20);
+      const mx = Math.max(...l20.slice(0, -1));
+      const mn = Math.min(...l20.slice(0, -1));
+      const last = l20[l20.length - 1];
+      let c = 'lightgreen';
+      if (last > mx) c = 'blue';
+      else if (last < mn) c = 'red';
+      wormLinesTop.push(c);
+      if (wormLinesTop.length > DISPLAY_COUNT) wormLinesTop.shift();
+    }
+
+    function renderWormLines(cid, wa) {
+      requestAnimationFrame(() => {
+        const c = document.getElementById(cid);
+        c.querySelectorAll('.worm-line').forEach(e => e.remove());
+        const boxes = c.querySelectorAll('.num-box');
+        boxes.forEach((box, idx) => {
+          if (!wa[idx]) return;
+          const line = document.createElement('div');
+          line.className = 'worm-line';
+          line.style.width = box.offsetWidth + 'px';
+          line.style.left = box.offsetLeft + 'px';
+          line.style.top = (box.offsetTop + box.offsetHeight + 0.2) + 'px';
+          line.style.borderTopColor = wa[idx];
+          c.appendChild(line);
+        });
+      });
+    }
+
+    function _scheduleRender() {
+      if (_pendingRender) return;
+      _pendingRender = true;
+      const now = Date.now();
+      const elapsed = now - _lastTickRender;
+      const delay = Math.max(0, _tickRenderThrottle - elapsed);
+      setTimeout(() => {
+        _pendingRender = false;
+        _lastTickRender = Date.now();
+        renderWormLines('numbersTop', wormLinesTop.slice(-DISPLAY_COUNT));
+      }, delay);
+    }
+
+    // =========================
+    // SİNÜS ÇİZİM FONKSİYONLARI
+    // =========================
+
+    function resetSinus() {
+      sinusMode = false;
+      sinusActive = false;
+      sinusLevelDetected = false;
+      sinusLevelDrawn = false;
+      sinusPendingTick = false;
+      sinusData = [];
+      sinusTickCount = 0;
+      if (sinusCanvas && sinusCtx) {
+        const rect = sinusCanvas.parentElement.getBoundingClientRect();
+        sinusCtx.clearRect(0, 0, rect.width, rect.height);
+      }
+    }
+
+    function drawSinus() {
+      if (!sinusCanvas || !sinusCtx) return;
+      const canvas = sinusCanvas;
+      const ctx = sinusCtx;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (sinusData.length === 0) return;
+
+      // Y ekseni aralığı
+      const yValues = sinusData.map(d => d.y);
+      const minY = Math.min(...yValues);
+      const maxY = Math.max(...yValues);
+      const range = maxY - minY || 1;
+      const padding = range * 0.15;
+
+      // X ölçeği: 0'dan sinusData.length-1'e
+      const xScale = (i) => (i / (sinusData.length - 1 || 1)) * w;
+
+      // Sinüs eğrisi
+      ctx.beginPath();
+      ctx.strokeStyle = '#00e676';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < sinusData.length; i++) {
+        const x = xScale(i);
+        const y = h - ((sinusData[i].y - minY + padding) / (range + 2 * padding)) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Level çizgisi
+      if (sinusLevelDrawn) {
+        const levelY = sinusLevelValue;
+        const yPos = h - ((levelY - minY + padding) / (range + 2 * padding)) * h;
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = 'orange';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.moveTo(0, yPos);
+        ctx.lineTo(w, yPos);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // "level" yazısı
+        ctx.fillStyle = 'orange';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('level', 6, yPos - 4);
+        ctx.restore();
+      }
+    }
+
+    function startSinus() {
+      if (prices.length < 2) {
+        alert('Yeterli veri yok!');
+        return;
+      }
+      // Önceki sinüs verilerini temizle
+      resetSinus();
+      sinusMode = true;
+      sinusActive = true;
+      sinusLevelDetected = false;
+      sinusLevelDrawn = false;
+      sinusPendingTick = false;
+      sinusData = [];
+      sinusTickCount = 0;
+
+      const p1 = prices[prices.length - 2];
+      const p2 = prices[prices.length - 1];
+      const M = (p1 + p2) / 2;
+      const A = Math.abs(p2 - p1) / 2;
+      const T = 20; // periyot (sabit)
+      let phi = 0;
+      if (A > 0.0001) {
+        phi = Math.asin((p1 - M) / A);
+        // p2'ye göre doğru fazı bulmaya çalış
+        const testVal = M + A * Math.sin(2 * Math.PI * 1 / T + phi);
+        if (Math.abs(testVal - p2) > 0.001) {
+          phi = Math.PI - phi;
+        }
+      }
+      sinusParams = { M, A, T, phi, t: 0 };
+      sinusData.push({ t: 0, y: p1 });
+      sinusData.push({ t: 1, y: p2 });
+      sinusTickCount = 2;
+      drawSinus();
+    }
+
+    // =========================
+    // DERIV WEBSOCKET
+    // =========================
+
+    function startWS() {
+      if (ws) {
+        try { ws.close(); } catch (e) {}
+      }
+      ws = new WebSocket('wss://api.derivws.com/trading/v1/options/ws/public');
+
+      ws.onopen = () => {
+        console.log('Deriv Public WebSocket bağlantısı kuruldu');
+        ws.send(JSON.stringify({
+          ticks_history: currentPair,
+          end: 'latest',
+          count: DISPLAY_COUNT,
+          style: 'ticks'
+        }));
+        ws.send(JSON.stringify({
+          ticks: currentPair,
+          subscribe: 1
+        }));
+      };
+
+      ws.onmessage = msg => {
+        let d;
+        try { d = JSON.parse(msg.data); } catch (e) { console.error('JSON parse hatası:', e); return; }
+
+        // GEÇMİŞ TICKLER
+        if (d.history && d.history.prices) {
+          d.history.prices.forEach(p => {
+            const ps = String(p);
+            const pr = parseFloat(p);
+            prices.push(pr);
+            if (prices.length > 200) prices.shift();
+            const parts = ps.split('.');
+            let dp = parts[1] || '0';
+            if (dp.length === 1) dp += '0';
+            const ld = dp.charAt(dp.length - 1) || '0';
+            decimalDigits.push(ld);
+            if (decimalDigits.length > 200) decimalDigits.shift();
+            updateWorm();
+          });
+        }
+
+        // CANLI TICK
+        if (d.tick) {
+          const ps = String(d.tick.quote);
+          const pr = parseFloat(d.tick.quote);
+          prices.push(pr);
+          if (prices.length > DISPLAY_COUNT) prices.shift();
+
+          const parts = ps.split('.');
+          const ip = parts[0];
+          let dp = parts[1] || '0';
+          if (dp.length === 1) dp += '0';
+          const ld = dp.charAt(dp.length - 1) || '0';
+          decimalDigits.push(ld);
+          if (decimalDigits.length > DISPLAY_COUNT) decimalDigits.shift();
+
+          updateWorm();
+
+          const pe = document.getElementById('price');
+          let dp2 = ip + (dp && dp !== '00' ? ',' + dp : ',00');
+          pe.innerText = dp2;
+          if (prices.length > 1) {
+            const prev = prices[prices.length - 2];
+            if (pr > prev) pe.style.background = 'blue';
+            else if (pr < prev) pe.style.background = 'red';
+            else pe.style.background = '#0b57d0';
+          }
+
+          // ---------- SİNÜS İŞLEMLERİ ----------
+          if (sinusMode && sinusActive) {
+            // Level tespiti (aynı renk ve son rakam farkı 1)
+            if (numColors.length >= 2 && !sinusLevelDetected) {
+              const lastColor = numColors[numColors.length - 1];
+              const prevColor = numColors[numColors.length - 2];
+              const lastDigit = parseInt(decimalDigits[decimalDigits.length - 1]);
+              const prevDigit = parseInt(decimalDigits[decimalDigits.length - 2]);
+              if (lastColor === prevColor && Math.abs(lastDigit - prevDigit) === 1) {
+                sinusLevelDetected = true;
+                sinusLevelValue = (prices[prices.length - 1] + prices[prices.length - 2]) / 2;
+                sinusLevelDrawn = true;
+                sinusPendingTick = true;
+                // Bu tick'i sinüse ekleme, sadece flag
+                drawSinus();
+              }
+            }
+
+            // Eğer pendingTick ise, bu tick'i ekle ve dur
+            if (sinusPendingTick) {
+              const t = sinusParams.t + 1;
+              const y = sinusParams.M + sinusParams.A * Math.sin(2 * Math.PI * t / sinusParams.T + sinusParams.phi);
+              sinusData.push({ t, y });
+              sinusTickCount++;
+              sinusParams.t = t;
+              sinusActive = false;
+              sinusPendingTick = false;
+              drawSinus();
+            } else {
+              // Normal ekleme (level tespit edilmediyse)
+              const t = sinusParams.t + 1;
+              const y = sinusParams.M + sinusParams.A * Math.sin(2 * Math.PI * t / sinusParams.T + sinusParams.phi);
+              sinusData.push({ t, y });
+              sinusTickCount++;
+              sinusParams.t = t;
+              drawSinus();
+              if (sinusTickCount >= sinusMaxTicks) {
+                sinusActive = false;
+              }
+            }
+          }
+          // ------------------------------------
+
+          // SAYI KUTULARI
+          const row = document.getElementById('numbersTop');
+          row.innerHTML = '';
+          numColors = [];
+          const sa = decimalDigits.slice(-DISPLAY_COUNT);
+          const frag = document.createDocumentFragment();
+          for (let i = 0; i < sa.length; i++) {
+            const gi = decimalDigits.length - DISPLAY_COUNT + i;
+            const up = gi > 0 && prices[gi] > prices[gi - 1];
+            const dn = gi > 0 && prices[gi] < prices[gi - 1];
+            const c = up ? 'blue' : (dn ? 'red' : '#666');
+            numColors.push(c);
+            const box = document.createElement('div');
+            box.className = 'num-box';
+            box.style.background = c;
+            box.innerText = sa[i] || '0';
+            frag.appendChild(box);
+          }
+          row.appendChild(frag);
+
+          // CHART
+          const lN = prices.slice(-DISPLAY_COUNT);
+          if (chart) {
+            chart.data.datasets[0].data = lN;
+            chart.data.datasets[0].pointBackgroundColor = lN.map((p, i) => {
+              if (i === 0) return 'gray';
+              if (p > lN[i - 1]) return 'blue';
+              if (p < lN[i - 1]) return 'red';
+              return 'gray';
+            });
+            chart.data.datasets[0].pointBorderColor = Array(lN.length).fill('transparent');
+            chart.data.labels = Array.from({ length: lN.length }, (_, i) => (i + 1).toString());
+            chart.update('none');
+          }
+
+          _scheduleRender();
+        }
+      };
+
+      ws.onerror = error => { console.error('Deriv WebSocket hatası:', error); };
+      ws.onclose = () => { console.log('Deriv WebSocket bağlantısı kapandı'); };
+    }
+
+    // =========================
+    // GMT
+    // =========================
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('time').innerText =
+        'GMT ' +
+        now.getUTCHours().toString().padStart(2, '0') + ':' +
+        now.getUTCMinutes().toString().padStart(2, '0') + ':' +
+        now.getUTCSeconds().toString().padStart(2, '0');
+    }
+
+    // =========================
+    // CHART
+    // =========================
+
+    function initChart() {
+      const ctx = document.getElementById('chart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: DISPLAY_COUNT }, (_, i) => (i + 1).toString()),
+          datasets: [{
+            data: Array(DISPLAY_COUNT).fill(null),
+            borderColor: '#fff',
+            borderWidth: 1.5,
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            pointBackgroundColor: Array(DISPLAY_COUNT).fill('#fff'),
+            pointRadius: 2,
+            pointHoverRadius: 3
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+            x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } }
+          },
+          animation: false,
+          maintainAspectRatio: false
+        },
+        plugins: [{
+          afterDatasetsDraw(ci) {
+            const ctx = ci.ctx;
+            const meta = ci.getDatasetMeta(0);
+            const isDark = !document.body.classList.contains('day-mode');
+            const decs = decimalDigits.slice(-DISPLAY_COUNT);
+            const colors = numColors.slice(-DISPLAY_COUNT);
+            ctx.font = '900 15px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            const worms = wormLinesTop.slice(-DISPLAY_COUNT);
+            meta.data.forEach((pt, i) => {
+              let t = decs[i] || '';
+              if (pt && pt.x !== undefined) {
+                let fc = colors[i] || '#000';
+                if (fc === 'blue') fc = '#6A9FFF';
+                ctx.fillStyle = fc;
+                ctx.fillText(t, pt.x, pt.y - 2);
+                const wc = worms[i];
+                if (wc === 'blue' || wc === 'red') {
+                  ctx.strokeStyle = wc;
+                  ctx.lineWidth = 2;
+                  ctx.beginPath();
+                  ctx.moveTo(pt.x - 5, pt.y - 2);
+                  ctx.lineTo(pt.x + 5, pt.y - 2);
+                  ctx.stroke();
+                }
+              }
+            });
+            const last = meta.data[meta.data.length - 1];
+            if (last && last.x !== undefined) {
+              ctx.strokeStyle = isDark ? '#40E0D0' : '#000';
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(ci.scales.x.left, last.y);
+              ctx.lineTo(last.x, last.y);
+              ctx.stroke();
+            }
+          }
+        }]
+      });
+    }
+
+    // =========================
+    // BAŞLANGIÇ
+    // =========================
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      setTimeout(() => {
+        document.getElementById('loadingIndicator').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }, 300);
+      }, 1000);
+
+      initChart();
+
+      // Sinüs canvas
+      sinusCanvas = document.getElementById('sinusCanvas');
+      sinusCtx = sinusCanvas.getContext('2d');
+
+      document.querySelectorAll('.num-box,#chartContainer').forEach(el =>
+        el.classList.add('performance-mode', 'hw-accelerate')
+      );
+
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+      document.getElementById('startStopBtn').addEventListener('click', () => {
+        prices = [];
+        decimalDigits = [];
+        wormLinesTop = [];
+        numColors = [];
+        document.getElementById('numbersTop').innerHTML = '';
+        resetSinus();
+        if (chart) {
+          chart.data.datasets[0].data = Array(DISPLAY_COUNT).fill(null);
+          chart.data.labels = Array.from({ length: DISPLAY_COUNT }, (_, i) => (i + 1).toString());
+          chart.update('none');
+        }
+        document.getElementById('price').innerText = '0.00';
+        document.getElementById('price').style.background = '#0b57d0';
+        if (ws) { try { ws.close(); } catch (e) {} }
+        if (isRunning) startWS();
+      });
+
+      // SİN butonu
+      document.getElementById('sinBtn').addEventListener('click', startSinus);
+
+      setInterval(() => {
+        if (prices.length > 100) prices.splice(0, prices.length - 100);
+        if (decimalDigits.length > 100) decimalDigits.splice(0, decimalDigits.length - 100);
+        if (numColors.length > 100) numColors.splice(0, numColors.length - 100);
+        if (wormLinesTop.length > 100) wormLinesTop.splice(0, wormLinesTop.length - 100);
+      }, 300000);
+
+      document.querySelectorAll('.pair-btn').forEach(btn =>
+        btn.addEventListener('click', function() {
+          const pair = this.getAttribute('data-pair');
+          if (pair) selectPair(pair);
+        })
+      );
+
+      setInterval(updateTime, 1000);
+      updateTime();
+      startWS();
+      updateLogos();
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () =>
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(r => console.log('SW:', r.scope))
+            .catch(e => console.log('SW fail:', e))
+        );
+      }
+
+      let _wl = null;
+      function _rwl() {
+        if ('wakeLock' in navigator) {
+          navigator.wakeLock.request('screen')
+            .then(wl => { _wl = wl; wl.addEventListener('release', () => setTimeout(_rwl, 1000)); })
+            .catch(() => {});
+        }
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          _rwl();
+          if (!ws || ws.readyState !== WebSocket.OPEN) startWS();
+        }
+      });
+      document.addEventListener('click', function ia() { _rwl(); }, { once: true });
+
+      // Pencere boyutu değişince sinüs çizimini güncelle
+      window.addEventListener('resize', () => {
+        if (sinusMode && sinusData.length > 0) drawSinus();
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>
