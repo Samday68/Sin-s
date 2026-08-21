@@ -302,6 +302,17 @@
       z-index: 5;
     }
 
+    /* ================= SON 7 SAYI AYIRICI ÇİZGİ ================= */
+
+    #sevenLine {
+      position: absolute;
+      width: 2px;
+      background: orange;
+      z-index: 6;
+      pointer-events: none;
+      display: none;
+    }
+
     /* ================= SIN ANALIZ PANELI ================= */
 
     #sinPanelWrap {
@@ -411,6 +422,8 @@
 
   <div id="mainContainer">
     <div id="leftSection">
+
+      <div id="sevenLine"></div>
 
       <div id="headerSection">
         <img
@@ -524,6 +537,7 @@
   <script>
 
     const DISPLAY_COUNT = 20;
+    const SEVEN_SPLIT_COUNT = 7;
 
     let ws = null;
     let isRunning = true;
@@ -624,6 +638,7 @@
       updateLogos();
       updateChartColors();
       renderSinPanel();
+      positionSevenLine();
 
     }
 
@@ -657,6 +672,7 @@
       document.getElementById('numbersTop').innerHTML = '';
 
       resetSin();
+      positionSevenLine();
 
       if (isRunning)
         startWS();
@@ -747,6 +763,66 @@
         });
 
       });
+
+    }
+
+
+    // =========================
+    // SON 7 SAYI AYIRICI SABİT ÇİZGİ
+    // =========================
+
+    function positionSevenLine() {
+
+      const line =
+        document.getElementById('sevenLine');
+
+      const row =
+        document.getElementById('numbersTop');
+
+      const leftSection =
+        document.getElementById('leftSection');
+
+      if (!line || !row || !leftSection)
+        return;
+
+      const boxes =
+        row.querySelectorAll('.num-box');
+
+      if (boxes.length < SEVEN_SPLIT_COUNT) {
+        line.style.display = 'none';
+        return;
+      }
+
+      const idx =
+        boxes.length - SEVEN_SPLIT_COUNT;
+
+      const targetBox =
+        boxes[idx];
+
+      const overhang = 4;
+
+      const leftRect =
+        leftSection.getBoundingClientRect();
+
+      const boxRect =
+        targetBox.getBoundingClientRect();
+
+      const rowRect =
+        row.getBoundingClientRect();
+
+      const x =
+        boxRect.left - leftRect.left;
+
+      const top =
+        (rowRect.top - leftRect.top) - overhang;
+
+      const bottom =
+        (rowRect.bottom - leftRect.top) + overhang;
+
+      line.style.display = 'block';
+      line.style.left = x + 'px';
+      line.style.top = top + 'px';
+      line.style.height = (bottom - top) + 'px';
 
     }
 
@@ -1057,6 +1133,8 @@
         );
 
         renderSinPanel();
+
+        positionSevenLine();
 
       }, delay);
 
@@ -1400,6 +1478,9 @@
         row.appendChild(
           frag
         );
+
+
+        requestAnimationFrame(positionSevenLine);
 
 
         // SIN paneline yeni tik ekle (sadece canlı tiklerde)
@@ -1926,6 +2007,8 @@
 
         renderSinPanel();
 
+        positionSevenLine();
+
 
         document
           .querySelectorAll(
@@ -2050,6 +2133,8 @@
                 '';
 
               resetSin();
+
+              positionSevenLine();
 
 
               if (chart) {
@@ -2235,6 +2320,12 @@
 
 
         updateLogos();
+
+
+        window.addEventListener(
+          'resize',
+          positionSevenLine
+        );
 
 
         if (
